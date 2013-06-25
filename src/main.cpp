@@ -1001,19 +1001,22 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
     // Limit adjustment step
     int64 nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
     printf("  nActualTimespan = %"PRI64d"  before bounds\n", nActualTimespan);
-    if (nActualTimespan < GetTargetTimespan() / 8)
-        nActualTimespan = GetTargetTimespan() / 8;
-    if (nActualTimespan > GetTargetTimespan() * 2)
-        nActualTimespan = GetTargetTimespan() * 2;
+
+    int64 nAdjustmentFactor = 2;
+
+    if (nActualTimespan < GetTargetTimespan() / (nAdjustmentFactor * 4))
+        nActualTimespan = GetTargetTimespan() / (nAdjustmentFactor * 4);
+    if (nActualTimespan > GetTargetTimespan() * nAdjustmentFactor * 1)
+        nActualTimespan = GetTargetTimespan() * nAdjustmentFactor * 1;
 
     // Retarget
     CBigNum bnNew;
     bnNew.SetCompact(pindexLast->nBits);
-    bnNew *= (nActualTimespan * 4);
-    bnNew /= (GetTargetSpacing() * 4);
+    bnNew *= (nActualTimespan * nAdjustmentFactor * 2);
+    bnNew /= (GetTargetSpacing() * nAdjustmentFactor * 2);
 
-    if (bnNew > (bnProofOfWorkLimit / 2))
-        bnNew = (bnProofOfWorkLimit / 2);
+    if (bnNew > (bnProofOfWorkLimit / nAdjustmentFactor * 1))
+        bnNew = (bnProofOfWorkLimit / nAdjustmentFactor * 1);
 
     /// debug print
     printf("GetNextWorkRequired RETARGET\n");
