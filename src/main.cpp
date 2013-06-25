@@ -1004,19 +1004,33 @@ unsigned int static GetNextWorkRequired(const CBlockIndex* pindexLast, const CBl
 
     int64 nAdjustmentFactor = 2;
 
-    if (nActualTimespan < GetTargetTimespan() / (nAdjustmentFactor * 4))
-        nActualTimespan = GetTargetTimespan() / (nAdjustmentFactor * 4);
-    if (nActualTimespan > GetTargetTimespan() * nAdjustmentFactor * 1)
-        nActualTimespan = GetTargetTimespan() * nAdjustmentFactor * 1;
+    if(pindexLast->nHeight + 1 < 10000) {
+        if (nActualTimespan < GetTargetTimespan() / (nAdjustmentFactor * 4))
+            nActualTimespan = GetTargetTimespan() / (nAdjustmentFactor * 4);
+        if (nActualTimespan > GetTargetTimespan() * nAdjustmentFactor * 1)
+            nActualTimespan = GetTargetTimespan() * nAdjustmentFactor * 1;
+    } else {
+        if (nActualTimespan < GetTargetTimespan() / (nAdjustmentFactor * 2))
+            nActualTimespan = GetTargetTimespan() / (nAdjustmentFactor * 2);
+        if (nActualTimespan > GetTargetTimespan() * nAdjustmentFactor * 1)
+            nActualTimespan = GetTargetTimespan() * nAdjustmentFactor * 1;
+    }
 
     // Retarget
     CBigNum bnNew;
     bnNew.SetCompact(pindexLast->nBits);
-    bnNew *= (nActualTimespan * nAdjustmentFactor * 2);
-    bnNew /= (GetTargetSpacing() * nAdjustmentFactor * 2);
 
-    if (bnNew > (bnProofOfWorkLimit / nAdjustmentFactor * 1))
-        bnNew = (bnProofOfWorkLimit / nAdjustmentFactor * 1);
+    if(pindexLast->nHeight + 1 < 10000) {
+        bnNew *= (nActualTimespan * nAdjustmentFactor * 2);
+        bnNew /= (GetTargetSpacing() * nAdjustmentFactor * 2);
+        if (bnNew > (bnProofOfWorkLimit / nAdjustmentFactor * 1))
+            bnNew = (bnProofOfWorkLimit / nAdjustmentFactor * 1);
+    } else {
+        bnNew *= (nActualTimespan * nAdjustmentFactor * 1);
+        bnNew /= (GetTargetSpacing() * nAdjustmentFactor * 1);
+        if (bnNew > bnProofOfWorkLimit)
+            bnNew = bnProofOfWorkLimit;
+    }
 
     /// debug print
     printf("GetNextWorkRequired RETARGET\n");
